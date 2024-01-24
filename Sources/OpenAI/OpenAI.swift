@@ -88,6 +88,14 @@ final public class OpenAI: OpenAIProtocol {
         performSteamingRequest(request: JSONRequest<ChatResult>(body: query.makeStreamable(), url: buildURL(path: .chats)), onResult: onResult, completion: completion)
     }
     
+    public func imageVision(query: ImageVisionQuery, completion: @escaping (Result<ChatResult, Error>) -> Void) {
+        performRequest(request: JSONRequest<CompletionsResult>(body: query, url: buildURL(path: .chats)), completion: completion)
+    }
+    
+    public func imageVisionStream(query: ImageVisionQuery, onResult: @escaping (Result<ChatStreamResult, Error>) -> Void, completion: ((Error?) -> Void)?) {
+        performSteamingRequest(request: JSONRequest<CompletionsResult>(body: query.makeStreamable(), url: buildURL(path: .chats)), onResult: onResult, completion: completion)
+    }
+    
     public func edits(query: EditsQuery, completion: @escaping (Result<EditsResult, Error>) -> Void) {
         performRequest(request: JSONRequest<EditsResult>(body: query, url: buildURL(path: .edits)), completion: completion)
     }
@@ -122,9 +130,10 @@ extension OpenAI {
 
     func performRequest<ResultType: Codable>(request: any URLRequestBuildable, completion: @escaping (Result<ResultType, Error>) -> Void) {
         do {
-            let request = try request.build(token: configuration.token, 
+            let request = try request.build(token: configuration.token,
                                             organizationIdentifier: configuration.organizationIdentifier,
                                             timeoutInterval: configuration.timeoutInterval)
+            
             let task = session.dataTask(with: request) { data, _, error in
                 if let error = error {
                     completion(.failure(error))
